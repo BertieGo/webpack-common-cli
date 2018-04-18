@@ -1,0 +1,17 @@
+# MAC
+.DS_Store
+
+# Node.js and NPM
+node_modules/
+npm-debug.log
+npm-debug.log.*
+
+# IDEA
+/.idea/*
+# !/.idea/jsLibraryMappings.xml
+!/.idea/misc.xml
+!/.idea/pkfare-buyer-web-app.iml
+!/.idea/webResources.xml
+!/.idea/inspectionProfiles
+/.idea/inspectionProfiles/*
+!/.idea/inspectionProfiles/Project_Default.xml
