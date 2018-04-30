@@ -11,14 +11,13 @@
   "license": "ISC",
   "dependencies": {
     "@babel/core": "^7.0.0-beta.46",
-    "@babel/polyfill": "^7.0.0-beta.46",
-    "@babel/runtime": "^7.0.0-beta.46",
+    "babel-polyfill": "^6.26.0", // 全局垫片，实现babel未能转译的较新的方法如 generator/Set/Map/includes, 并将该方法置于全局下使用
     "lodash": "^4.17.5",
-    "react": "^16.3.2"
+    "react": "^16.3.2",
+    "babel-runtime": "^6.26.0", // 局部垫片，相对babel-polyfill不会去污染全局环境
   },
   "devDependencies": {
-    "@babel/plugin-transform-runtime": "^7.0.0-beta.46",
-    "@babel/preset-env": "^7.0.0-beta.46",
+    "@babel/preset-env": "^7.0.0-beta.46", // 指定babel规范的版本
     "babel-core": "^6.26.3",
     "babel-loader": "^8.0.0-beta.2",
     "clean-webpack-plugin": "^0.1.19",
