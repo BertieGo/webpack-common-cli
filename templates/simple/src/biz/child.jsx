@@ -1,4 +1,4 @@
-// import _ from 'lodash';
+import './scss.loader.scss';
 
 const a = '12312';
 

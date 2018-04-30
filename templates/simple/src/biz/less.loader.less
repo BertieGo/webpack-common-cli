@@ -1,0 +1,15 @@
+@testLessVar: #000;
+
+body {
+  background: @testLessVar;
+  display: flex;
+  align-items: center
+}
+
+:root {
+  --nextcss: #344;
+}
+
+.next {
+  color: var(--nextcss);
+}
