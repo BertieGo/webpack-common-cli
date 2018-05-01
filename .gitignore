@@ -6,6 +6,9 @@ node_modules/
 npm-debug.log
 npm-debug.log.*
 
+# build
+dist
+
 # IDEA
 /.idea/*
 # !/.idea/jsLibraryMappings.xml
