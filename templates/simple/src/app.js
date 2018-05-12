@@ -1,34 +1,39 @@
-import child from 'biz/child';
-// import child2 from 'biz/child2';
-import '@babel/polyfill';
+import React from 'react';
+import {Provider} from 'react-redux';
+import Child from 'biz/child';
+import _ from 'lodash';
 import base from './biz/base.css';
 import cssLoader from './biz/css.loader.css';
 import './biz/less.loader.less';
 import scss from './biz/scss.loader.scss';
-import * as React from 'react';
-import * as ReactDOM from 'react-dom';
 
-class App extends React.Component{
+import * as accountActions from './common/actions/account';
+import store from './store';
+
+export default class App extends React.Component{
+
+  componentDidMount() {
+    _.cloneDeep({a: 2});
+    console.log(233);
+  }
+
+  dispatchTest = () => {
+    store.dispatch(accountActions.updateAccountInfo({
+      accountId: 1
+    }));
+  };
+
   render(){
+    // Provider只能有一个子节点
     return (
-      <div className={scss.test}>
-        123123123123
+      <div>
+        <Provider store={store}>
+          <div>
+            <h1 onClick={this.dispatchTest}>123123</h1>
+            <Child/>
+          </div>
+        </Provider>
       </div>
     )
   }
 }
-
-ReactDOM.render(
-  <App/>,
-  document.getElementById('root')
-);
-
-// window.setInterval(() => {
-//   if (a) {
-//     base.use();
-//     a = false;
-//   } else {
-//     base.unuse();
-//     a = true;
-//   };
-// },500)

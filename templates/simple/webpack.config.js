@@ -8,7 +8,6 @@ const AutoPrefixer = require('autoprefixer');
 const PostcssPxtorem = require('postcss-pxtorem');
 const PostcssNext = require('postcss-cssnext');
 
-
 const ROOT_PATH = path.resolve(__dirname);
 const APP_PATH = path.resolve(ROOT_PATH, 'src');
 const BUILD_PATH = path.resolve(ROOT_PATH, 'dist');
@@ -27,7 +26,7 @@ const styleLoader = (options = {}, useable) => {
     singleton: true
   };
   return {
-    loader: `style-loader${useable ? '/useable' : ''}`, 
+    loader: `style-loader${useable ? '/useable' : ''}`,
     options: Object.assign(defaultOptions, options)
   }
 }
@@ -40,7 +39,7 @@ const cssLoader = (options = {}) => {
     localIdentName: '[path][name]_[local]_[hash:base64:5]' // 定义混淆命名规则
   };
   return {
-    loader: 'css-loader', 
+    loader: 'css-loader',
     options: Object.assign(defaultOptions, options)
   }
 }
@@ -60,22 +59,21 @@ const postcssLoader = (options = {}) => {
     ]
   };
   return {
-    loader: 'postcss-loader', 
+    loader: 'postcss-loader',
     options: Object.assign(defaultOptions, options)
   }
 }
 
 
-
 const webpackConfig = {
-  entry: './src/app.js',
+  entry: './src/main.jsx',
   output: {
     path: BUILD_PATH,
     filename: 'bundle.js',
     chunkFilename: '[name]chunk.js', // 指定动态加载的文件的名字
     publicPath: './' // 声明文件的引用路径
   },
-  devtool: 'eval', // 此处为了得到最大的构建速度，选择了eval模式
+  devtool: env === MODE_ENUM.pro ? 'eval-source-map' : 'source-map',
   mode: env, // 区分当前是哪一种的构建模式
   resolve: {
     extensions: ['.js', '.jsx'], // 自动解析确定的扩展
@@ -85,18 +83,19 @@ const webpackConfig = {
   },
 
   devServer: {
-    publicPath: '/',
-    contentBase: BUILD_PATH,
-    historyApiFallback: true,
+    publicPath: '/', // 确定应该从哪里提供 bundle
+    contentBase: BUILD_PATH, // 告诉服务器从哪里提供内容
+    historyApiFallback: true, // 是否将404请求转到index.html
     hot: true,
-    open: true,
+    // open: true,
     inline: true,
     port: 8888,
     host: 'localhost',
     openPage: '',
     proxy: {},
     quiet: true,
-    compress: true // 开发服务器是否启动gzip等压缩
+    progress: true,
+    compress:  env === MODE_ENUM.pro// 开发服务器是否启动gzip等压缩
     /*  https: {
       key: fs.readFileSync('/path/to/server.key'),
       cert: fs.readFileSync('/path/to/server.crt'),
@@ -113,14 +112,11 @@ const webpackConfig = {
           options: {
             cacheDirectory: true,
             presets: [
-              '@babel/react',
-              ['@babel/preset-stage-2',
-                { 
-                  decoratorsLegacy: true 
-                }
-              ],
+              'es2015',
+              'react',
+              'stage-0',
               [
-                '@babel/env',
+                'env',
                 {
                   debug: false,
                   modules: false, // 因为webpack2开始已经支持了ES6的模块功能，不需要再转化
@@ -138,14 +134,21 @@ const webpackConfig = {
               ]
             ],
             plugins: [
-              '@babel/transform-runtime', 'transform-decorators-legacy','react-hot-loader/babel'
+              'react-hot-loader/babel',
+              'transform-class-properties',
+              'transform-decorators-legacy',
+              'transform-runtime',
+              ["import", { "libraryName": "antd", style: "css" }]
             ]
           }
         }
       },
       {
         test: /\.css$/,
-        exclude: /node_modules/,
+        include: [
+          path.resolve(ROOT_PATH, 'src'),
+          path.resolve(ROOT_PATH, './node_modules/antd')
+        ],
         /**
          * {style-loader}
          * 可加/useable配置是否使用某个css样式表，主要用来根据页面需要来动态增删css文件
@@ -158,7 +161,9 @@ const webpackConfig = {
           styleLoader({
             singleton: false
           }),
-          cssLoader()
+          cssLoader({
+            modules: false // antd 样式不能用css-modules
+          })
         ]
       },
       {
@@ -166,7 +171,7 @@ const webpackConfig = {
         exclude: /node_modules/,
         /**
          * ExtractTextWebpackPlugin 跟webpack的热替换存在冲突，故判断运行环境选择是否使用该插件
-         * @see 
+         * @see
          * https://github.com/webpack-contrib/extract-text-webpack-plugin/issues/30
          */
         use: env === MODE_ENUM.dev ? [
@@ -254,25 +259,60 @@ const webpackConfig = {
       publicPath: './dist/',
       template: './index.html'
     }),
-    // new ExtractTextWebpackPlugin({
-    //   filename: '[name].min.css', // HtmlWebpackPlugin插件会自动去匹配ExtractTextWebpackPlugin所生成的css文件
-    //   allChunks: false // 定义提取css的范围，假如用的true，那么将会在第一次提取所有的css，false将会提取初始的代码，即实现了css代码的动态加载
-    // }),
-    new UglifyJsPlugin({
-      cache: true,
-      parallel: true,
-      uglifyOptions: {
-        compress: true,
-        ecma: 6,
-        mangle: true
-      },
-      sourceMap: true
+    new ExtractTextWebpackPlugin({
+      filename: '[name].min.css', // HtmlWebpackPlugin插件会自动去匹配ExtractTextWebpackPlugin所生成的css文件
+      allChunks: false // 定义提取css的范围，假如用的true，那么将会在第一次提取所有的css，false将会提取初始的代码，即实现了css代码的动态加载
     }),
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.DllReferencePlugin({
+      context: __dirname,
+      manifest: require('./dist/dll/vendor.manifest.json'), // json的地址
+      // extensions: ['.js', '.jsx']
+    }),
     // new CleanWebpackPlugin(['dist']),
     // new webpack.NamedModulesPlugin(),
     // new webpack.HotModuleReplacementPlugin()
   ]
 };
+
+if (env === MODE_ENUM.pro) {
+  module.exports.optimization = {
+    minimizer: [
+      new UglifyJsPlugin({
+        cache: true,
+        parallel: true,
+        uglifyOptions: {
+          compress: true,
+          ecma: 6,
+          mangle: true
+        },
+        sourceMap: true
+      })
+    ],
+    // common-chunk-and-vendor-chunk 配置如下:
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          chunks: 'initial',
+          minChunks: 2,
+          maxInitialRequests: 5, 
+          minSize: 0 
+        },
+        vendor: {
+          test: /node_modules/,
+          chunks: 'initial',
+          name: 'vendor',
+          priority: 10,
+          enforce: true
+        }
+      }
+    } 
+  };
+
+  module.exports.plugins = (module.exports.plugins || []).concat([
+    // new OptimizeCssAssetsPlugin({})
+    // new CleanPlugin([BUILD_PATH])
+  ]);
+}
 
 module.exports = webpackConfig;
